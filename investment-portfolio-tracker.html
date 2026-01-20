@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Portfolio Tracker | Telos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a24;
+            --bg-card-hover: #222230;
+            --border: #2a2a3a;
+            --text-primary: #ffffff;
+            --text-secondary: #8b8b9e;
+            --text-muted: #5a5a6e;
+            --accent-green: #00ff88;
+            --accent-green-dim: rgba(0, 255, 136, 0.15);
+            --accent-red: #ff4757;
+            --accent-red-dim: rgba(255, 71, 87, 0.15);
+            --accent-blue: #5865f2;
+            --accent-blue-dim: rgba(88, 101, 242, 0.15);
+            --accent-yellow: #ffd93d;
+            --accent-purple: #a855f7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 24px;
+            background-image: 
+                radial-gradient(ellipse at 10% 10%, rgba(0, 255, 136, 0.02) 0%, transparent 40%),
+                radial-gradient(ellipse at 90% 90%, rgba(88, 101, 242, 0.02) 0%, transparent 40%);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+            color: var(--accent-green);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .market-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .market-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Sora', sans-serif;
+        }
+
+        .btn:hover {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .btn-primary {
+            background: var(--accent-green);
+            color: #000;
+            border-color: var(--accent-green);
+        }
+
+        .btn-primary:hover {
+            background: #00cc6f;
+        }
+
+        /* Portfolio Summary */
+        .portfolio-summary {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 600px) {
+            .portfolio-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .main-value-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(0, 255, 136, 0.05) 100%);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-value-card::after {
+            content: '📈';
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            font-size: 60px;
+            opacity: 0.1;
+        }
+
+        .value-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .value-amount {
+            font-size: 42px;
+            font-weight: 700;
+            font-family: 'Space Mono', monospace;
+            margin-bottom: 12px;
+        }
+
+        .value-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .value-change.positive { color: var(--accent-green); }
+        .value-change.negative { color: var(--accent-red); }
+
+        .stats-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mini-stat {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mini-stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .mini-stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Space Mono', monospace;
+        }
+
+        /* Holdings Table */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            margin-top: 8px;
+        }
+
+        .section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-secondary);
+        }
+
+        .holdings-table {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            padding: 16px 24px;
+            background: var(--bg-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .holding-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s ease;
+            align-items: center;
+        }
+
+        .holding-row:last-child {
+            border-bottom: none;
+        }
+
+        .holding-row:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .holding-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .holding-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: var(--bg-secondary);
+        }
+
+        .holding-name {
+            font-weight: 500;
+        }
+
+        .holding-symbol {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .holding-value {
+            font-family: 'Space Mono', monospace;
+            font-weight: 500;
+        }
+
+        .holding-change {
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+        }
+
+        .holding-change.positive { color: var(--accent-green); }
+        .holding-change.negative { color: var(--accent-red); }
+
+        .allocation-bar {
+            width: 60px;
+            height: 6px;
+            background: var(--bg-secondary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .allocation-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        /* Allocation Chart */
+        .allocation-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 600px) {
+            .allocation-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .allocation-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .allocation-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .allocation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .allocation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .allocation-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .allocation-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .allocation-percent {
+            font-family: 'Space Mono', monospace;
+            font-weight: 600;
+        }
+
+        /* Transaction History */
+        .transaction-row {
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            gap: 16px;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            align-items: center;
+        }
+
+        .transaction-row:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-type {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .transaction-type.buy {
+            background: var(--accent-green-dim);
+            color: var(--accent-green);
+        }
+
+        .transaction-type.sell {
+            background: var(--accent-red-dim);
+            color: var(--accent-red);
+        }
+
+        .transaction-type.dividend {
+            background: var(--accent-blue-dim);
+            color: var(--accent-blue);
+        }
+
+        .transaction-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .transaction-asset {
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .transaction-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .transaction-shares {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-align: right;
+        }
+
+        .transaction-amount {
+            font-family: 'Space Mono', monospace;
+            font-weight: 500;
+            text-align: right;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            padding: 40px 20px;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            max-width: 500px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 32px;
+            border: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: 'Sora', sans-serif;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--accent-green);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+            padding: 14px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .holding-row, .transaction-row {
+            animation: fadeIn 0.4s ease forwards;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <div class="logo">📊 Portfolio Tracker</div>
+                <div class="market-status">
+                    <div class="market-dot"></div>
+                    <span>Live Data</span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn" onclick="openAddModal()">+ Add Holding</button>
+                <button class="btn" onclick="openTransactionModal()">+ Transaction</button>
+            </div>
+        </div>
+
+        <!-- Portfolio Summary -->
+        <div class="portfolio-summary">
+            <div class="main-value-card">
+                <div class="value-label">Portfolio Value</div>
+                <div class="value-amount" id="portfolioValue">$0.00</div>
+                <div class="value-change positive" id="portfolioChange">
+                    <span>↑</span>
+                    <span id="changeText">$0.00 (0.00%)</span>
+                    <span style="color: var(--text-secondary); font-weight: 400;">all time</span>
+                </div>
+            </div>
+            <div class="stats-column">
+                <div class="mini-stat">
+                    <span class="mini-stat-label">Total Invested</span>
+                    <span class="mini-stat-value" id="totalInvested">$0.00</span>
+                </div>
+                <div class="mini-stat">
+                    <span class="mini-stat-label">Total Gain/Loss</span>
+                    <span class="mini-stat-value" id="totalGainLoss">$0.00</span>
+                </div>
+                <div class="mini-stat">
+                    <span class="mini-stat-label">Holdings</span>
+                    <span class="mini-stat-value" id="holdingsCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Holdings -->
+        <div class="section-header">
+            <div class="section-title">Holdings</div>
+        </div>
+        <div class="holdings-table">
+            <div class="table-header">
+                <div>Asset</div>
+                <div>Shares</div>
+                <div>Avg Cost</div>
+                <div>Value</div>
+                <div>Return</div>
+            </div>
+            <div id="holdingsList">
+                <div class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <div>No holdings yet. Add your first investment!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Allocation & Recent Transactions -->
+        <div class="allocation-section">
+            <div class="allocation-card">
+                <div class="allocation-title">Asset Allocation</div>
+                <div class="allocation-list" id="allocationList">
+                    <div style="text-align: center; color: var(--text-secondary); padding: 20px;">
+                        Add holdings to see allocation
+                    </div>
+                </div>
+            </div>
+            <div class="allocation-card">
+                <div class="allocation-title">Recent Transactions</div>
+                <div id="transactionsList">
+                    <div style="text-align: center; color: var(--text-secondary); padding: 20px;">
+                        No transactions yet
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Holding Modal -->
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <div class="modal-title">Add New Holding</div>
+            <div class="form-group">
+                <label class="form-label">Asset Name</label>
+                <input type="text" class="form-input" id="assetName" placeholder="e.g., Apple Inc.">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Symbol / Ticker</label>
+                <input type="text" class="form-input" id="assetSymbol" placeholder="e.g., AAPL" style="text-transform: uppercase;">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Shares Owned</label>
+                    <input type="number" class="form-input" id="assetShares" placeholder="0" step="0.001">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Avg. Cost/Share</label>
+                    <input type="number" class="form-input" id="assetCost" placeholder="0.00" step="0.01">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Current Price</label>
+                <input type="number" class="form-input" id="assetPrice" placeholder="0.00" step="0.01">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                <select class="form-select" id="assetCategory">
+                    <option value="stock">Stock</option>
+                    <option value="etf">ETF</option>
+                    <option value="crypto">Cryptocurrency</option>
+                    <option value="bond">Bond</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="addHolding()">Add Holding</button>
+                <button class="btn" onclick="closeModal('addModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Modal -->
+    <div class="modal" id="transactionModal">
+        <div class="modal-content">
+            <div class="modal-title">Record Transaction</div>
+            <div class="form-group">
+                <label class="form-label">Transaction Type</label>
+                <select class="form-select" id="txType">
+                    <option value="buy">Buy</option>
+                    <option value="sell">Sell</option>
+                    <option value="dividend">Dividend</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Asset</label>
+                <select class="form-select" id="txAsset">
+                    <option value="">Select asset...</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Shares</label>
+                    <input type="number" class="form-input" id="txShares" placeholder="0" step="0.001">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Price/Share</label>
+                    <input type="number" class="form-input" id="txPrice" placeholder="0.00" step="0.01">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-input" id="txDate">
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="addTransaction()">Record Transaction</button>
+                <button class="btn" onclick="closeModal('transactionModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data structure
+        let portfolioData = {
+            holdings: [],
+            transactions: [],
+            lastUpdated: new Date().toISOString()
+        };
+
+        // Color palette for allocations
+        const categoryColors = {
+            stock: '#00ff88',
+            etf: '#5865f2',
+            crypto: '#ffd93d',
+            bond: '#a855f7',
+            other: '#ff4757'
+        };
+
+        const categoryIcons = {
+            stock: '📈',
+            etf: '📊',
+            crypto: '₿',
+            bond: '🏛️',
+            other: '💎'
+        };
+
+        // Load from localStorage
+        const saved = localStorage.getItem('telosPortfolio');
+        if (saved) {
+            portfolioData = JSON.parse(saved);
+        }
+
+        function saveData() {
+            portfolioData.lastUpdated = new Date().toISOString();
+            localStorage.setItem('telosPortfolio', JSON.stringify(portfolioData));
+        }
+
+        function formatCurrency(amount) {
+            return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatPercent(value) {
+            return (value >= 0 ? '+' : '') + value.toFixed(2) + '%';
+        }
+
+        function render() {
+            const holdings = portfolioData.holdings;
+            
+            // Calculate totals
+            let totalValue = 0;
+            let totalCost = 0;
+            
+            holdings.forEach(h => {
+                totalValue += h.shares * h.currentPrice;
+                totalCost += h.shares * h.avgCost;
+            });
+
+            const totalGain = totalValue - totalCost;
+            const totalGainPercent = totalCost > 0 ? (totalGain / totalCost) * 100 : 0;
+
+            // Update summary
+            document.getElementById('portfolioValue').textContent = '$' + formatCurrency(totalValue);
+            document.getElementById('totalInvested').textContent = '$' + formatCurrency(totalCost);
+            document.getElementById('totalGainLoss').textContent = (totalGain >= 0 ? '+$' : '-$') + formatCurrency(Math.abs(totalGain));
+            document.getElementById('totalGainLoss').style.color = totalGain >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            document.getElementById('holdingsCount').textContent = holdings.length;
+
+            const changeEl = document.getElementById('portfolioChange');
+            changeEl.className = `value-change ${totalGain >= 0 ? 'positive' : 'negative'}`;
+            changeEl.querySelector('span:first-child').textContent = totalGain >= 0 ? '↑' : '↓';
+            document.getElementById('changeText').textContent = `${totalGain >= 0 ? '+' : '-'}$${formatCurrency(Math.abs(totalGain))} (${formatPercent(totalGainPercent)})`;
+
+            // Render holdings
+            const holdingsList = document.getElementById('holdingsList');
+            if (holdings.length === 0) {
+                holdingsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <div>No holdings yet. Add your first investment!</div>
+                    </div>
+                `;
+            } else {
+                holdingsList.innerHTML = holdings.map((h, idx) => {
+                    const value = h.shares * h.currentPrice;
+                    const cost = h.shares * h.avgCost;
+                    const gain = value - cost;
+                    const gainPercent = cost > 0 ? (gain / cost) * 100 : 0;
+                    const allocation = totalValue > 0 ? (value / totalValue) * 100 : 0;
+
+                    return `
+                        <div class="holding-row" style="animation-delay: ${idx * 0.05}s;">
+                            <div class="holding-info">
+                                <div class="holding-icon">${categoryIcons[h.category] || '💰'}</div>
+                                <div>
+                                    <div class="holding-name">${h.name}</div>
+                                    <div class="holding-symbol">${h.symbol}</div>
+                                </div>
+                            </div>
+                            <div class="holding-value">${h.shares.toFixed(3)}</div>
+                            <div class="holding-value">$${formatCurrency(h.avgCost)}</div>
+                            <div class="holding-value">$${formatCurrency(value)}</div>
+                            <div>
+                                <div class="holding-change ${gain >= 0 ? 'positive' : 'negative'}">
+                                    ${gain >= 0 ? '+' : '-'}$${formatCurrency(Math.abs(gain))}
+                                </div>
+                                <div class="holding-change ${gain >= 0 ? 'positive' : 'negative'}" style="font-size: 12px;">
+                                    ${formatPercent(gainPercent)}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Render allocation
+            const allocationList = document.getElementById('allocationList');
+            if (holdings.length === 0) {
+                allocationList.innerHTML = `
+                    <div style="text-align: center; color: var(--text-secondary); padding: 20px;">
+                        Add holdings to see allocation
+                    </div>
+                `;
+            } else {
+                // Group by category
+                const categoryTotals = {};
+                holdings.forEach(h => {
+                    const value = h.shares * h.currentPrice;
+                    categoryTotals[h.category] = (categoryTotals[h.category] || 0) + value;
+                });
+
+                allocationList.innerHTML = Object.entries(categoryTotals)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([cat, value]) => {
+                        const percent = totalValue > 0 ? (value / totalValue) * 100 : 0;
+                        return `
+                            <div class="allocation-item">
+                                <div class="allocation-label">
+                                    <div class="allocation-dot" style="background: ${categoryColors[cat]}"></div>
+                                    <span>${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
+                                </div>
+                                <div class="allocation-percent" style="color: ${categoryColors[cat]}">${percent.toFixed(1)}%</div>
+                            </div>
+                        `;
+                    }).join('');
+            }
+
+            // Render transactions
+            const txList = document.getElementById('transactionsList');
+            const recentTx = portfolioData.transactions.slice(-5).reverse();
+            if (recentTx.length === 0) {
+                txList.innerHTML = `
+                    <div style="text-align: center; color: var(--text-secondary); padding: 20px;">
+                        No transactions yet
+                    </div>
+                `;
+            } else {
+                txList.innerHTML = recentTx.map(tx => {
+                    const typeIcon = tx.type === 'buy' ? '↓' : tx.type === 'sell' ? '↑' : '💰';
+                    const amount = tx.shares * tx.price;
+                    return `
+                        <div class="transaction-row">
+                            <div class="transaction-type ${tx.type}">${typeIcon}</div>
+                            <div class="transaction-details">
+                                <div class="transaction-asset">${tx.type.charAt(0).toUpperCase() + tx.type.slice(1)} ${tx.symbol}</div>
+                                <div class="transaction-date">${new Date(tx.date).toLocaleDateString()}</div>
+                            </div>
+                            <div class="transaction-shares">${tx.shares} shares</div>
+                            <div class="transaction-amount" style="color: ${tx.type === 'sell' ? 'var(--accent-green)' : 'var(--text-primary)'}">
+                                ${tx.type === 'sell' ? '+' : ''}$${formatCurrency(amount)}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Update transaction modal asset dropdown
+            const txAssetSelect = document.getElementById('txAsset');
+            txAssetSelect.innerHTML = '<option value="">Select asset...</option>' + 
+                holdings.map(h => `<option value="${h.symbol}">${h.symbol} - ${h.name}</option>`).join('');
+        }
+
+        function openAddModal() {
+            document.getElementById('addModal').style.display = 'block';
+        }
+
+        function openTransactionModal() {
+            document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('transactionModal').style.display = 'block';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function addHolding() {
+            const holding = {
+                id: Date.now(),
+                name: document.getElementById('assetName').value,
+                symbol: document.getElementById('assetSymbol').value.toUpperCase(),
+                shares: parseFloat(document.getElementById('assetShares').value) || 0,
+                avgCost: parseFloat(document.getElementById('assetCost').value) || 0,
+                currentPrice: parseFloat(document.getElementById('assetPrice').value) || 0,
+                category: document.getElementById('assetCategory').value
+            };
+
+            if (!holding.name || !holding.symbol) {
+                alert('Please fill in asset name and symbol');
+                return;
+            }
+
+            portfolioData.holdings.push(holding);
+            saveData();
+            closeModal('addModal');
+            
+            // Clear form
+            document.getElementById('assetName').value = '';
+            document.getElementById('assetSymbol').value = '';
+            document.getElementById('assetShares').value = '';
+            document.getElementById('assetCost').value = '';
+            document.getElementById('assetPrice').value = '';
+
+            render();
+        }
+
+        function addTransaction() {
+            const tx = {
+                id: Date.now(),
+                type: document.getElementById('txType').value,
+                symbol: document.getElementById('txAsset').value,
+                shares: parseFloat(document.getElementById('txShares').value) || 0,
+                price: parseFloat(document.getElementById('txPrice').value) || 0,
+                date: document.getElementById('txDate').value
+            };
+
+            if (!tx.symbol || !tx.shares) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            portfolioData.transactions.push(tx);
+
+            // Update holding shares
+            const holding = portfolioData.holdings.find(h => h.symbol === tx.symbol);
+            if (holding) {
+                if (tx.type === 'buy') {
+                    const newTotalCost = (holding.shares * holding.avgCost) + (tx.shares * tx.price);
+                    const newShares = holding.shares + tx.shares;
+                    holding.avgCost = newTotalCost / newShares;
+                    holding.shares = newShares;
+                } else if (tx.type === 'sell') {
+                    holding.shares = Math.max(0, holding.shares - tx.shares);
+                }
+            }
+
+            saveData();
+            closeModal('transactionModal');
+            
+            // Clear form
+            document.getElementById('txShares').value = '';
+            document.getElementById('txPrice').value = '';
+
+            render();
+        }
+
+        // Initial render
+        render();
+    </script>
+</body>
+</html>
